@@ -1,23 +1,43 @@
-import './index.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './lib/auth';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import ChangePassword from './pages/ChangePassword';
+import Dashboard from './pages/Dashboard';
+import './index.css';
+
+const queryClient = new QueryClient();
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 mb-6">
-          <div className="w-8 h-8 bg-[#00C896] rounded-md flex items-center justify-center">
-            <div className="w-4 h-4 bg-white rounded-sm" />
-          </div>
-          <div className="text-left">
-            <div className="font-semibold text-zinc-900 text-sm leading-tight">CashToken</div>
-            <div className="font-mono text-[9px] uppercase tracking-widest text-stone-400">Marketing Ops</div>
-          </div>
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 mb-2">
-          Hello CashToken
-        </h1>
-        <p className="text-stone-500 text-sm">Phase 0 complete — Tailwind is working.</p>
-      </div>
-    </div>
-  )
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/change-password"
+              element={
+                <ProtectedRoute>
+                  <ChangePassword />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            >
+              {/* nested routes rendered via Outlet in Dashboard */}
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
 }
