@@ -7,7 +7,7 @@ export async function callApi(action, payload = {}) {
 
   const body = { action, ...payload };
   if (token) {
-    body._token = token;
+    body.token = token;
   }
 
   const response = await fetch(API_URL, {

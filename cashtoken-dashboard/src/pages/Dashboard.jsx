@@ -86,7 +86,7 @@ export default function Dashboard() {
 
           <NavLink to="/tasks" className={navLinkClass}>
             <CheckSquare size={15} />
-            Tasks
+            {isMember ? 'My Tasks' : 'Tasks'}
           </NavLink>
 
           <NavLink to="/reports" className={navLinkClass}>
@@ -161,9 +161,6 @@ export default function Dashboard() {
         {/* Content */}
         <main className="flex-1 overflow-auto">
           <Outlet />
-          <div className="flex items-center justify-center h-full min-h-64 text-stone-400 text-sm">
-            Dashboard coming soon
-          </div>
         </main>
       </div>
     </div>
