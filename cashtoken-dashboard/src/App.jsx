@@ -9,6 +9,7 @@ import Tasks from './pages/Tasks';
 import ApprovalQueue from './pages/ApprovalQueue';
 import Reports from './pages/Reports';
 import Requests from './pages/Requests';
+import Team from './pages/Team';
 import PublicRequest from './pages/PublicRequest';
 import './index.css';
 
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="approvals" element={<ApprovalQueue />} />
               <Route path="reports" element={<Reports />} />
               <Route path="requests" element={<Requests />} />
+              <Route path="team" element={<Team />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
