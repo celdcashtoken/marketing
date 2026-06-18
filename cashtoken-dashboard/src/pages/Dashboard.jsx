@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   Zap,
@@ -12,6 +13,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
+import { callApi } from '../lib/api';
 
 function BrandMark() {
   return (
@@ -31,11 +33,23 @@ function BrandMark() {
 
 function navLinkClass({ isActive }) {
   return [
-    'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
+    'flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-colors',
     isActive
       ? 'bg-stone-100 text-zinc-900 font-medium'
       : 'text-stone-500 hover:bg-stone-50 hover:text-zinc-900',
   ].join(' ');
+}
+
+function Badge({ count, color = 'amber' }) {
+  if (!count) return null;
+  const cls = color === 'rose'
+    ? 'bg-rose-100 text-rose-600'
+    : 'bg-amber-100 text-amber-700';
+  return (
+    <span className={`${cls} text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-full`}>
+      {count}
+    </span>
+  );
 }
 
 export default function Dashboard() {
@@ -44,17 +58,45 @@ export default function Dashboard() {
 
   const role = user?.role;
   const isMember = role === 'member';
-  const isCmoOrAssistant =
-    role === 'cmo' || user?.secondary_role === 'assistant';
+  const isCmoOrAssistant = role === 'cmo' || user?.secondary_role === 'assistant';
+  const isHead = role === 'head';
 
-  // Fake counts for UI demo
-  const approvalCount = 3;
-  const requestCount = 2;
+  // Live data for badge counts
+  const { data } = useQuery({
+    queryKey: ['all'],
+    queryFn: () => callApi('getAll'),
+    refetchInterval: 15000,
+    staleTime: 10000,
+  });
+
+  const tasks = data?.data?.tasks || [];
+  const requests = data?.data?.requests || [];
+
+  // Approval queue count — tasks at ready_for_cmo_review (CMO/assistant sees all)
+  const approvalCount = isCmoOrAssistant
+    ? tasks.filter(t => t.status === 'ready_for_cmo_review').length
+    : isHead
+    ? tasks.filter(t => t.status === 'ready_for_head_review' && t.category === user?.category && t.assignee_id !== user?.id).length
+    : 0;
+
+  // Requests needing triage (submitted, not yet approved)
+  const pendingRequestsCount = requests.filter(r => r.status === 'submitted').length;
 
   async function handleLogout() {
     await logout();
     navigate('/login');
   }
+
+  // Avatar color per role
+  const avatarColor = role === 'cmo'
+    ? 'bg-amber-700'
+    : role === 'head' && user?.category === 'socials'
+    ? 'bg-pink-600'
+    : user?.secondary_role === 'assistant'
+    ? 'bg-emerald-600'
+    : role === 'head'
+    ? 'bg-violet-600'
+    : 'bg-slate-400';
 
   return (
     <div className="flex h-screen bg-stone-50 overflow-hidden">
@@ -68,16 +110,15 @@ export default function Dashboard() {
             Dashboard
           </NavLink>
 
-          {isCmoOrAssistant ? (
+          {/* Approval Queue — CMO/assistant see it; Heads see their review queue */}
+          {(isCmoOrAssistant || isHead) ? (
             <NavLink to="/approvals" className={navLinkClass}>
               <Zap size={15} />
-              <span className="flex-1">Approval Queue</span>
-              <span className="bg-amber-100 text-amber-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
-                {approvalCount}
-              </span>
+              <span className="flex-1">{isCmoOrAssistant ? 'Approval Queue' : 'Review Queue'}</span>
+              <Badge count={approvalCount} color={isCmoOrAssistant ? 'amber' : 'amber'} />
             </NavLink>
           ) : (
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm opacity-40 cursor-not-allowed select-none">
+            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] opacity-40 cursor-not-allowed select-none">
               <Zap size={15} />
               <span className="flex-1">Approval Queue</span>
               <Lock size={11} />
@@ -91,26 +132,30 @@ export default function Dashboard() {
 
           <NavLink to="/reports" className={navLinkClass}>
             <FileText size={15} />
-            Reports
+            {isMember ? 'My Reports' : 'Reports'}
           </NavLink>
 
-          {!isMember && (
+          {!isMember ? (
             <NavLink to="/requests" className={navLinkClass}>
               <Inbox size={15} />
               <span className="flex-1">Requests</span>
-              <span className="bg-rose-100 text-rose-600 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
-                {requestCount}
-              </span>
+              {pendingRequestsCount > 0 && <Badge count={pendingRequestsCount} color="rose" />}
             </NavLink>
+          ) : (
+            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] opacity-40 cursor-not-allowed select-none">
+              <Inbox size={15} />
+              <span className="flex-1">Requests</span>
+              <Lock size={11} />
+            </div>
           )}
 
           {!isMember ? (
             <NavLink to="/team" className={navLinkClass}>
               <Users size={15} />
-              Team
+              {isHead ? 'My Team' : 'Team'}
             </NavLink>
           ) : (
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm opacity-40 cursor-not-allowed select-none">
+            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] opacity-40 cursor-not-allowed select-none">
               <Users size={15} />
               <span className="flex-1">Team</span>
               <Lock size={11} />
@@ -121,12 +166,18 @@ export default function Dashboard() {
         {/* User footer */}
         <div className="border-t border-stone-200 px-3 py-3">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 bg-[#00C896] rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+            <div className={`w-7 h-7 ${avatarColor} rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0`}>
               {user?.name?.[0]?.toUpperCase() ?? 'U'}
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-xs font-medium text-zinc-900 truncate">{user?.name ?? 'User'}</div>
-              <div className="text-[10px] text-stone-400 capitalize truncate">{role ?? ''}</div>
+              <div className="font-mono text-[9px] uppercase tracking-wider text-stone-400 truncate">
+                {role === 'head'
+                  ? `Head · ${user?.category || ''}`
+                  : user?.secondary_role === 'assistant'
+                  ? 'Member · Asst'
+                  : role}
+              </div>
             </div>
           </div>
           <button
@@ -148,10 +199,7 @@ export default function Dashboard() {
             <span className="text-sm text-stone-400">Search…</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-stone-500">
-              <div className="w-2 h-2 rounded-full bg-[#00C896]" />
-              synced just now
-            </div>
+            <SyncPill data={data} />
             <button className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-500 hover:text-zinc-900 transition-colors">
               <Bell size={16} />
             </button>
@@ -166,3 +214,29 @@ export default function Dashboard() {
     </div>
   );
 }
+
+function SyncPill({ data }) {
+  const ts = data?.timestamp;
+  const [stale, setStale] = useState(false);
+
+  // Flip to stale after 30s from last fetch
+  React.useEffect(() => {
+    if (!ts) return;
+    setStale(false);
+    const timer = setTimeout(() => setStale(true), 30000);
+    return () => clearTimeout(timer);
+  }, [ts]);
+
+  const label = ts ? (stale ? 'stale' : 'synced just now') : 'connecting…';
+  const dotColor = ts && !stale ? 'bg-[#00C896]' : 'bg-amber-400';
+
+  return (
+    <div className={`flex items-center gap-1.5 text-xs font-mono ${stale ? 'text-amber-600' : 'text-stone-500'}`}>
+      <div className={`w-2 h-2 rounded-full ${dotColor}`} />
+      {label}
+    </div>
+  );
+}
+
+// Need React for useEffect in SyncPill
+import React, { useState } from 'react';

@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import ChangePassword from './pages/ChangePassword';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
+import ApprovalQueue from './pages/ApprovalQueue';
 import './index.css';
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ export default function App() {
               }
             >
               <Route path="tasks" element={<Tasks />} />
+              <Route path="approvals" element={<ApprovalQueue />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
