@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import ApprovalQueue from './pages/ApprovalQueue';
 import Reports from './pages/Reports';
+import Requests from './pages/Requests';
+import PublicRequest from './pages/PublicRequest';
 import './index.css';
 
 const queryClient = new QueryClient();
@@ -19,6 +21,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/request" element={<PublicRequest />} />
             <Route
               path="/change-password"
               element={
@@ -38,6 +41,7 @@ export default function App() {
               <Route path="tasks" element={<Tasks />} />
               <Route path="approvals" element={<ApprovalQueue />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="requests" element={<Requests />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
