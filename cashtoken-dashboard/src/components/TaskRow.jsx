@@ -4,6 +4,7 @@ import PriorityBadge from './PriorityBadge';
 import RejectModal from './RejectModal';
 import { allowedStatusOptions, STATUS_LABELS } from '../lib/permissions';
 import { callApi } from '../lib/api';
+import { useToast } from '../lib/toast';
 
 function formatDeadline(dateStr) {
   if (!dateStr) return '—';
@@ -22,6 +23,7 @@ export default function TaskRow({ task, user, users = [], onUpdate, showAssignee
   const [savingAction, setSavingAction] = useState(null); // 'approve' | 'reject'
   const [error, setError] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const toast = useToast();
 
   const options = allowedStatusOptions(user, task);
   const isReadOnly = options === null;
@@ -51,8 +53,10 @@ export default function TaskRow({ task, user, users = [], onUpdate, showAssignee
     setSaving(false);
     if (res.ok) {
       onUpdate?.({ ...task, status: newStatus });
+      toast({ message: 'Status updated' });
     } else {
       setError('Failed to save');
+      toast({ message: 'Failed to update status', type: 'error' });
     }
   }
 
@@ -67,8 +71,10 @@ export default function TaskRow({ task, user, users = [], onUpdate, showAssignee
     setSavingAction(null);
     if (res.ok) {
       onUpdate?.({ ...task, status: 'ready_for_cmo_review' });
+      toast({ message: `"${task.title}" sent to CMO` });
     } else {
       setError('Failed to approve');
+      toast({ message: 'Failed to approve task', type: 'error' });
     }
   }
 
@@ -84,8 +90,10 @@ export default function TaskRow({ task, user, users = [], onUpdate, showAssignee
     if (res.ok) {
       setShowRejectModal(false);
       onUpdate?.({ ...task, status: 'in_progress', rejection_feedback: feedback });
+      toast({ message: 'Task returned with feedback' });
     } else {
       setError('Failed to reject');
+      toast({ message: 'Failed to reject task', type: 'error' });
     }
   }
 

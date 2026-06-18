@@ -12,6 +12,8 @@ import {
   Bell,
   LogOut,
   Sparkles,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { callApi } from '../lib/api';
@@ -56,6 +58,7 @@ function Badge({ count, color = 'amber' }) {
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const role = user?.role;
   const isMember = role === 'member';
@@ -99,110 +102,135 @@ export default function Dashboard() {
     ? 'bg-violet-600'
     : 'bg-slate-400';
 
-  return (
-    <div className="flex h-screen bg-stone-50 overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-48 flex-shrink-0 bg-white border-r border-stone-200 flex flex-col">
-        <BrandMark />
+  const sidebarContent = (
+    <>
+      <BrandMark />
+      <nav className="flex-1 px-2 py-3 space-y-0.5" onClick={() => setSidebarOpen(false)}>
+        <NavLink to="/" end className={navLinkClass}>
+          <LayoutDashboard size={15} />
+          Dashboard
+        </NavLink>
 
-        <nav className="flex-1 px-2 py-3 space-y-0.5">
-          <NavLink to="/" end className={navLinkClass}>
-            <LayoutDashboard size={15} />
-            Dashboard
+        {(isCmoOrAssistant || isHead) ? (
+          <NavLink to="/approvals" className={navLinkClass}>
+            <Zap size={15} />
+            <span className="flex-1">{isCmoOrAssistant ? 'Approval Queue' : 'Review Queue'}</span>
+            <Badge count={approvalCount} />
           </NavLink>
+        ) : (
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] opacity-40 cursor-not-allowed select-none">
+            <Zap size={15} />
+            <span className="flex-1">Approval Queue</span>
+            <Lock size={11} />
+          </div>
+        )}
 
-          {/* Approval Queue — CMO/assistant see it; Heads see their review queue */}
-          {(isCmoOrAssistant || isHead) ? (
-            <NavLink to="/approvals" className={navLinkClass}>
-              <Zap size={15} />
-              <span className="flex-1">{isCmoOrAssistant ? 'Approval Queue' : 'Review Queue'}</span>
-              <Badge count={approvalCount} color={isCmoOrAssistant ? 'amber' : 'amber'} />
-            </NavLink>
-          ) : (
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] opacity-40 cursor-not-allowed select-none">
-              <Zap size={15} />
-              <span className="flex-1">Approval Queue</span>
-              <Lock size={11} />
-            </div>
-          )}
+        <NavLink to="/tasks" className={navLinkClass}>
+          <CheckSquare size={15} />
+          {isMember ? 'My Tasks' : 'Tasks'}
+        </NavLink>
 
-          <NavLink to="/tasks" className={navLinkClass}>
-            <CheckSquare size={15} />
-            {isMember ? 'My Tasks' : 'Tasks'}
+        <NavLink to="/reports" className={navLinkClass}>
+          <FileText size={15} />
+          {isMember ? 'My Reports' : 'Reports'}
+        </NavLink>
+
+        {!isMember ? (
+          <NavLink to="/requests" className={navLinkClass}>
+            <Inbox size={15} />
+            <span className="flex-1">Requests</span>
+            {pendingRequestsCount > 0 && <Badge count={pendingRequestsCount} color="rose" />}
           </NavLink>
+        ) : (
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] opacity-40 cursor-not-allowed select-none">
+            <Inbox size={15} />
+            <span className="flex-1">Requests</span>
+            <Lock size={11} />
+          </div>
+        )}
 
-          <NavLink to="/reports" className={navLinkClass}>
-            <FileText size={15} />
-            {isMember ? 'My Reports' : 'Reports'}
+        {!isMember ? (
+          <NavLink to="/team" className={navLinkClass}>
+            <Users size={15} />
+            {isHead ? 'My Team' : 'Team'}
           </NavLink>
+        ) : (
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] opacity-40 cursor-not-allowed select-none">
+            <Users size={15} />
+            <span className="flex-1">Team</span>
+            <Lock size={11} />
+          </div>
+        )}
 
-          {!isMember ? (
-            <NavLink to="/requests" className={navLinkClass}>
-              <Inbox size={15} />
-              <span className="flex-1">Requests</span>
-              {pendingRequestsCount > 0 && <Badge count={pendingRequestsCount} color="rose" />}
-            </NavLink>
-          ) : (
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] opacity-40 cursor-not-allowed select-none">
-              <Inbox size={15} />
-              <span className="flex-1">Requests</span>
-              <Lock size={11} />
-            </div>
-          )}
+        {isCmoOrAssistant && (
+          <NavLink to="/ai-reports" className={navLinkClass}>
+            <Sparkles size={15} />
+            <span className="flex-1">AI Reports</span>
+            <span className="text-[8px] font-mono uppercase tracking-wide text-violet-500 bg-violet-50 px-1 py-0.5 rounded">AI</span>
+          </NavLink>
+        )}
+      </nav>
 
-          {!isMember ? (
-            <NavLink to="/team" className={navLinkClass}>
-              <Users size={15} />
-              {isHead ? 'My Team' : 'Team'}
-            </NavLink>
-          ) : (
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] opacity-40 cursor-not-allowed select-none">
-              <Users size={15} />
-              <span className="flex-1">Team</span>
-              <Lock size={11} />
-            </div>
-          )}
-
-          {isCmoOrAssistant && (
-            <NavLink to="/ai-reports" className={navLinkClass}>
-              <Sparkles size={15} />
-              <span className="flex-1">AI Reports</span>
-              <span className="text-[8px] font-mono uppercase tracking-wide text-violet-500 bg-violet-50 px-1 py-0.5 rounded">AI</span>
-            </NavLink>
-          )}
-        </nav>
-
-        {/* User footer */}
-        <div className="border-t border-stone-200 px-3 py-3">
-          <div className="flex items-center gap-2 mb-2">
-            <div className={`w-7 h-7 ${avatarColor} rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0`}>
-              {user?.name?.[0]?.toUpperCase() ?? 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-zinc-900 truncate">{user?.name ?? 'User'}</div>
-              <div className="font-mono text-[9px] uppercase tracking-wider text-stone-400 truncate">
-                {role === 'head'
-                  ? `Head · ${user?.category || ''}`
-                  : user?.secondary_role === 'assistant'
-                  ? 'Member · Asst'
-                  : role}
-              </div>
+      {/* User footer */}
+      <div className="border-t border-stone-200 px-3 py-3">
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`w-7 h-7 ${avatarColor} rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0`}>
+            {user?.name?.[0]?.toUpperCase() ?? 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-medium text-zinc-900 truncate">{user?.name ?? 'User'}</div>
+            <div className="font-mono text-[9px] uppercase tracking-wider text-stone-400 truncate">
+              {role === 'head'
+                ? `Head · ${user?.category || ''}`
+                : user?.secondary_role === 'assistant'
+                ? 'Member · Asst'
+                : role}
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-zinc-900 transition-colors"
-          >
-            <LogOut size={12} />
-            Sign out
-          </button>
         </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-zinc-900 transition-colors"
+        >
+          <LogOut size={12} />
+          Sign out
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="flex h-screen bg-stone-50 overflow-hidden">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Mobile drawer */}
+      <aside className={`fixed inset-y-0 left-0 z-40 w-48 bg-white border-r border-stone-200 flex flex-col transform transition-transform duration-200 md:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {sidebarContent}
+      </aside>
+
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-48 flex-shrink-0 bg-white border-r border-stone-200 flex-col">
+        {sidebarContent}
       </aside>
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
         <header className="h-12 bg-white border-b border-stone-200 flex items-center px-4 gap-3 flex-shrink-0">
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setSidebarOpen(o => !o)}
+            className="md:hidden p-1.5 rounded-lg hover:bg-stone-100 text-stone-500 hover:text-zinc-900 transition-colors flex-shrink-0"
+          >
+            <Menu size={18} />
+          </button>
+
           <div className="flex items-center gap-2 bg-stone-100 rounded-lg px-3 py-1.5 flex-1 max-w-sm">
             <Search size={13} className="text-stone-400 flex-shrink-0" />
             <span className="text-sm text-stone-400">Search…</span>

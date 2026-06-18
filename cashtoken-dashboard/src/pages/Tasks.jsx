@@ -5,6 +5,7 @@ import { useAuth } from '../lib/auth';
 import { canSeeTask } from '../lib/permissions';
 import TaskRow from '../components/TaskRow';
 import StatusBadge from '../components/StatusBadge';
+import { SkeletonTable } from '../components/Skeleton';
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
@@ -114,11 +115,7 @@ export default function Tasks() {
         </div>
       </div>
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-6 h-6 border-2 border-stone-200 border-t-[#00C896] rounded-full animate-spin" />
-        </div>
-      )}
+      {isLoading && <SkeletonTable rows={6} cols={5} />}
 
       {isError && (
         <div className="text-center py-16 text-stone-400 text-sm">

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { callApi } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import ReportForm from '../components/ReportForm';
+import { SkeletonCard } from '../components/Skeleton';
 
 function canSeeReport(user, report) {
   if (user.role === 'cmo' || user.secondary_role === 'assistant') return true;
@@ -173,8 +174,8 @@ export default function Reports() {
       )}
 
       {isLoading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-6 h-6 border-2 border-stone-200 border-t-[#00C896] rounded-full animate-spin" />
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map(i => <SkeletonCard key={i} lines={2} />)}
         </div>
       )}
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { callApi } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import { useToast } from '../lib/toast';
 
 function getWeekStart() {
   const d = new Date();
@@ -25,6 +26,7 @@ function Field({ label, required, children, help }) {
 
 export default function ReportForm({ onClose, onSuccess }) {
   const { user } = useAuth();
+  const toast = useToast();
   const [form, setForm] = useState({
     tasks_completed: '',
     challenges: '',
@@ -69,9 +71,11 @@ export default function ReportForm({ onClose, onSuccess }) {
 
     setSubmitting(false);
     if (res.ok) {
+      toast({ message: 'Weekly report submitted' });
       onSuccess?.();
     } else {
       setError(res.error || 'Failed to submit. Please try again.');
+      toast({ message: 'Failed to submit report', type: 'error' });
     }
   }
 

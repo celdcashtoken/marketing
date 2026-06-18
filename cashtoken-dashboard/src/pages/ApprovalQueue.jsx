@@ -7,6 +7,8 @@ import { canSeeTask } from '../lib/permissions';
 import StatusBadge from '../components/StatusBadge';
 import PriorityBadge from '../components/PriorityBadge';
 import RejectModal from '../components/RejectModal';
+import { SkeletonCard } from '../components/Skeleton';
+import { useToast } from '../lib/toast';
 
 function formatDeadline(dateStr) {
   if (!dateStr) return null;
@@ -109,6 +111,7 @@ export default function ApprovalQueue() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [actionState, setActionState] = useState({}); // taskId → 'completing' | 'rejecting'
+  const toast = useToast();
 
   // Only CMO and assistant can access this page
   const isCmoOrAssistant = user?.role === 'cmo' || user?.secondary_role === 'assistant';
@@ -154,6 +157,9 @@ export default function ApprovalQueue() {
     setActionState(s => ({ ...s, [taskId]: null }));
     if (res.ok) {
       updateTaskInCache(taskId, { status: 'completed' });
+      toast({ message: 'Task marked as completed' });
+    } else {
+      toast({ message: 'Failed to complete task', type: 'error' });
     }
   }
 
@@ -167,6 +173,9 @@ export default function ApprovalQueue() {
     setActionState(s => ({ ...s, [taskId]: null }));
     if (res.ok) {
       updateTaskInCache(taskId, { status: 'in_progress', rejection_feedback: feedback });
+      toast({ message: 'Task returned with feedback' });
+    } else {
+      toast({ message: 'Failed to reject task', type: 'error' });
     }
   }
 
@@ -209,8 +218,8 @@ export default function ApprovalQueue() {
       </div>
 
       {isLoading && (
-        <div className="flex items-center justify-center py-16">
-          <div className="w-6 h-6 border-2 border-stone-200 border-t-[#00C896] rounded-full animate-spin" />
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <SkeletonCard key={i} lines={3} />)}
         </div>
       )}
 
