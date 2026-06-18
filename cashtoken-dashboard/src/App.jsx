@@ -10,6 +10,7 @@ import ApprovalQueue from './pages/ApprovalQueue';
 import Reports from './pages/Reports';
 import Requests from './pages/Requests';
 import Team from './pages/Team';
+import AiReports from './pages/AiReports';
 import PublicRequest from './pages/PublicRequest';
 import './index.css';
 
@@ -44,6 +45,7 @@ export default function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="requests" element={<Requests />} />
               <Route path="team" element={<Team />} />
+              <Route path="ai-reports" element={<AiReports />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

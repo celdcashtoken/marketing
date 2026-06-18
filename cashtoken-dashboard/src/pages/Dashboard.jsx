@@ -11,6 +11,7 @@ import {
   Search,
   Bell,
   LogOut,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { callApi } from '../lib/api';
@@ -160,6 +161,14 @@ export default function Dashboard() {
               <span className="flex-1">Team</span>
               <Lock size={11} />
             </div>
+          )}
+
+          {isCmoOrAssistant && (
+            <NavLink to="/ai-reports" className={navLinkClass}>
+              <Sparkles size={15} />
+              <span className="flex-1">AI Reports</span>
+              <span className="text-[8px] font-mono uppercase tracking-wide text-violet-500 bg-violet-50 px-1 py-0.5 rounded">AI</span>
+            </NavLink>
           )}
         </nav>
 
