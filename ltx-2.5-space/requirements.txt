@@ -1,0 +1,11 @@
+git+https://github.com/huggingface/diffusers.git
+torch>=2.2
+transformers>=4.44
+accelerate>=0.33
+sentencepiece
+safetensors
+imageio
+imageio-ffmpeg
+huggingface_hub
+gradio>=5.9
+spaces
